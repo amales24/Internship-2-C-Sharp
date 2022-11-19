@@ -434,13 +434,13 @@ void PlayerCheckup()
 bool ConfirmDialogue()
 {
     Console.WriteLine("Y - Zelim \nN - Ne zelim");
-    var potvrda = Console.ReadLine().Trim().ToUpper();
-    while (potvrda != "Y" && potvrda != "N")
+    var confirmation = Console.ReadLine().Trim().ToUpper();
+    while (confirmation != "Y" && confirmation != "N")
     {
         Console.WriteLine("Ta opcija ne postoji, unesite Y ili N:");
-        potvrda = Console.ReadLine().Trim().ToUpper();
+        confirmation = Console.ReadLine().Trim().ToUpper();
     }
-    return potvrda == "Y";
+    return confirmation == "Y";
 }
 void AddPlayer()
 {
