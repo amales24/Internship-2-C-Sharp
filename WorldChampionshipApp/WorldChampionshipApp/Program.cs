@@ -1,4 +1,30 @@
-﻿void StartMenu()
+﻿var playersDict = new Dictionary<string, (string position, int rating)>()
+    {
+        {"Luka Modric", ("MF",88) },
+        {"Marcelo Brozovic", ("MF",86) },
+        {"Mateo Kovacic", ("MF",84) },
+        {"Ivan Perisic", ("MF",84) },
+        {"Andrej Kramaric", ("FW",82) },
+        {"Ivan Rakitic", ("MF",82) },
+        {"Josko Gvardiol", ("DF",81) },
+        {"Mario Pasalic", ("MF",81) },
+        {"Lovro Majer", ("MF",80) },
+        {"Dominik Livakovic", ("GK",80) },
+        {"Ante Rebic", ("FW",80) },
+        {"Josip Brekalo", ("MF",79) },
+        {"Borna Sosa", ("DF",78) },
+        {"Nikola Vlasic", ("MF",78) },
+        {"Duje Caleta-Car", ("DF",78) },
+        {"Dejan Lovren", ("DF",78) },
+        {"Mislav Orsic", ("FW",77) },
+        {"Marko Livaja", ("FW",77) },
+        {"Domagoj Vida", ("DF",76) },
+        {"Ante Budimir", ("FW",76) }
+    };
+
+Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches = new Dictionary<(string team1, string team2), (int score1, int score2)>();
+Dictionary<string, int> strikersDict = new Dictionary<string, int>();
+string StartMenu()
 {
     Console.WriteLine("1 - Odradi trening \n2 - Odigraj utakmicu" +
         "\n3 - Statistika \n4 - Kontrola igraca \n0 - Izlaz iz aplikacije");
@@ -7,6 +33,13 @@
     var myChoice = Console.ReadLine().Trim();
     myChoice = Input(myChoice, myOptions);
 
+    return myChoice;
+}
+
+var myChoice = StartMenu();
+
+while (myChoice != "0") // repeats the process until the option "0" is chosen on the start menu
+{
     Console.Clear();
     switch (myChoice)
     {
@@ -14,18 +47,21 @@
             Environment.Exit(0);
             break;
         case "1":
-            Training();
+            Training(playersDict);
             break;
         case "2":
-            PlayAMatch();
+            PlayAMatch(playersDict, scoresByMatches, strikersDict);
             break;
         case "3":
-            Statistics();
+            Statistics(playersDict, scoresByMatches, strikersDict);
             break;
         case "4":
-            PlayerCheckup();
+            PlayerCheckup(playersDict);
             break;
     };
+
+    Console.Clear();
+    myChoice = StartMenu();
 }
 string Input(string choice, List<string> options)
 {
@@ -38,28 +74,28 @@ string Input(string choice, List<string> options)
 }
 void ReturnToStartMenu()
 {
-    Console.WriteLine("\nP - Povratak na glavni izbornik");
-    if (Console.ReadLine().Trim().ToUpper() == "P")
+    Console.WriteLine("\nP - Povratak na glavni izbornik"); // pressing P continues the iteration of the while loop
+    if (!(Console.ReadLine().Trim().ToUpper() == "P")) // pressing anything other than P results in closing the app
     {
         Console.Clear();
-        StartMenu();
+        Environment.Exit(0);
     }
 }
 
 //___1 - TRAINING______________________________________________________________________________________________
-void Training()
+void Training(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Igrači su uspješno odradili trening:\n");
 
     var rnd = new Random();
     int percentage, newRating, oldRating;
 
-    foreach (var player in Global.playersDict.Keys)
+    foreach (var player in playersDict.Keys)
     {
         percentage = rnd.Next(-5, 6); // minus if the player loses percentage, plus if they gain percentage
-        oldRating = Global.playersDict[player].rating;
+        oldRating = playersDict[player].rating;
         newRating = (100 + percentage) * oldRating / 100;
-        Global.playersDict[player] = (Global.playersDict[player].position, newRating);
+        playersDict[player] = (playersDict[player].position, newRating);
         Console.WriteLine($"{player} - stari rating: {oldRating}, novi rating: {newRating}");
     }
 
@@ -67,11 +103,12 @@ void Training()
 }
 
 //___2 - PLAY A MATCH________________________________________________________________________________________________
-void PlayAMatch()
+void PlayAMatch(Dictionary<string, (string position, int rating)> playersDict,
+    Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches, Dictionary<string, int> strikersDict)
 {
-    var bestPlayers = ChooseBestPlayers();
+    var bestPlayers = ChooseBestPlayers(playersDict);
 
-    if (Global.scoresByMatches.Count() == 6)
+    if (scoresByMatches.Count() == 6)
         Console.WriteLine("Već ste odigrali sve utakmice u skupini!");
     else if (bestPlayers.Count < 11)
         Console.WriteLine("Nemate dovoljno igraca za utakmicu!");
@@ -83,37 +120,37 @@ void PlayAMatch()
         var score3 = rnd.Next(0, 6);
         var score4 = rnd.Next(0, 6);
 
-        if (!Global.scoresByMatches.ContainsKey((teams.Hrvatska.ToString(), teams.Maroko.ToString()))) // 1.round
+        if (!scoresByMatches.ContainsKey((teams.Hrvatska.ToString(), teams.Maroko.ToString()))) // 1.round
         {
-            Global.scoresByMatches.Add((teams.Hrvatska.ToString(), teams.Maroko.ToString()), (score1, score2));
-            Global.scoresByMatches.Add((teams.Belgija.ToString(), teams.Kanada.ToString()), (score3, score4));
+            scoresByMatches.Add((teams.Hrvatska.ToString(), teams.Maroko.ToString()), (score1, score2));
+            scoresByMatches.Add((teams.Belgija.ToString(), teams.Kanada.ToString()), (score3, score4));
             Console.WriteLine($"Svi rezultati prvog kola:\n\n{teams.Hrvatska} - {teams.Maroko} : {score1} - {score2}" +
                 $"\n{teams.Belgija} - {teams.Kanada} : {score3} - {score4}");
         }
-        else if (!Global.scoresByMatches.ContainsKey((teams.Hrvatska.ToString(), teams.Kanada.ToString()))) // 2.round
+        else if (!scoresByMatches.ContainsKey((teams.Hrvatska.ToString(), teams.Kanada.ToString()))) // 2.round
         {
-            Global.scoresByMatches.Add((teams.Hrvatska.ToString(), teams.Kanada.ToString()), (score1, score2));
-            Global.scoresByMatches.Add((teams.Belgija.ToString(), teams.Maroko.ToString()), (score3, score4));
+            scoresByMatches.Add((teams.Hrvatska.ToString(), teams.Kanada.ToString()), (score1, score2));
+            scoresByMatches.Add((teams.Belgija.ToString(), teams.Maroko.ToString()), (score3, score4));
             Console.WriteLine($"Svi rezultati drugog kola:\n\n{teams.Hrvatska} - {teams.Kanada} : {score1} - {score2}" +
                 $"\n{teams.Belgija} - {teams.Maroko} : {score3} - {score4}");
         }
         else // 3.round
         {
-            Global.scoresByMatches.Add((teams.Hrvatska.ToString(), teams.Belgija.ToString()), (score1, score2));
-            Global.scoresByMatches.Add((teams.Kanada.ToString(), teams.Maroko.ToString()), (score3, score4));
+            scoresByMatches.Add((teams.Hrvatska.ToString(), teams.Belgija.ToString()), (score1, score2));
+            scoresByMatches.Add((teams.Kanada.ToString(), teams.Maroko.ToString()), (score3, score4));
             Console.WriteLine($"Svi rezultati treceg kola:\n\n{teams.Hrvatska} - {teams.Belgija} : {score1} - {score2}" +
                 $"\n{teams.Kanada} - {teams.Maroko} : {score3} - {score4}");
         }
 
-        GetAndUpdateStrikers(score1, bestPlayers, rnd);
-        UpdatePlayersRatings(bestPlayers, score1, score2);
+        GetAndUpdateStrikers(score1, bestPlayers, rnd, playersDict, strikersDict);
+        UpdatePlayersRatings(bestPlayers, score1, score2, playersDict);
     }
     ReturnToStartMenu();
 }
-List<string> ChooseBestPlayers()
+List<string> ChooseBestPlayers(Dictionary<string, (string position, int rating)> playersDict)
 {
     var bestPlayers = new List<string>();
-    var playersDictSorted = Global.playersDict.OrderByDescending(player => player.Value.rating);
+    var playersDictSorted = playersDict.OrderByDescending(player => player.Value.rating);
     int gk = 0, df = 0, mf = 0, fw = 0;
 
     foreach (var player in playersDictSorted)
@@ -145,7 +182,8 @@ List<string> ChooseBestPlayers()
     }
     return bestPlayers;
 }
-void GetAndUpdateStrikers(int score, List<string> bestPlayers, Random rnd)
+void GetAndUpdateStrikers(int score, List<string> bestPlayers, Random rnd,
+    Dictionary<string, (string position, int rating)> playersDict, Dictionary<string, int> strikersDict)
 {
     Console.WriteLine("\nRaspored zabijanja golova tijekom utakmice:\n");
 
@@ -155,17 +193,18 @@ void GetAndUpdateStrikers(int score, List<string> bestPlayers, Random rnd)
     {
         index = rnd.Next(0, 11); //choose the index of a player that will be the i-th striker
         striker = bestPlayers[index];
-        newRating = 105 * Global.playersDict[striker].rating / 100;
-        Console.WriteLine($"{i + 1}. {striker}, stari rating: {Global.playersDict[striker].rating}, novi rating: {newRating}");
-        Global.playersDict[striker] = (Global.playersDict[striker].position, newRating); // increase the strikers rating by 5%
+        newRating = 105 * playersDict[striker].rating / 100;
+        Console.WriteLine($"{i + 1}. {striker}, stari rating: {playersDict[striker].rating}, novi rating: {newRating}");
+        playersDict[striker] = (playersDict[striker].position, newRating); // increase the strikers rating by 5%
 
-        if (Global.strikersDict.ContainsKey(striker)) //add the striker to the list of strikers or update his number of goals
-            Global.strikersDict[striker] += 1;
+        if (strikersDict.ContainsKey(striker)) //add the striker to the list of strikers or update his number of goals
+            strikersDict[striker] += 1;
         else
-            Global.strikersDict.Add(striker, 1);
+            strikersDict.Add(striker, 1);
     }
 }
-void UpdatePlayersRatings(List<string> bestPlayers, int score1, int score2)
+void UpdatePlayersRatings(List<string> bestPlayers, int score1, int score2,
+    Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("\nRating igraca nakon utakmice:\n");
 
@@ -174,24 +213,25 @@ void UpdatePlayersRatings(List<string> bestPlayers, int score1, int score2)
     {
         foreach (var player in bestPlayers)
         {
-            newRating = 102 * Global.playersDict[player].rating / 100;
-            Console.WriteLine($"{player}, stari rating: {Global.playersDict[player].rating}, novi rating: {newRating}");
-            Global.playersDict[player] = (Global.playersDict[player].position, newRating);
+            newRating = 102 * playersDict[player].rating / 100;
+            Console.WriteLine($"{player}, stari rating: {playersDict[player].rating}, novi rating: {newRating}");
+            playersDict[player] = (playersDict[player].position, newRating);
         }
     }
     else if (score1 < score2) //if our team lost
     {
         foreach (var player in bestPlayers)
         {
-            newRating = 98 * Global.playersDict[player].rating / 100;
-            Console.WriteLine($"{player}, stari rating: {Global.playersDict[player].rating}, novi rating: {newRating}");
-            Global.playersDict[player] = (Global.playersDict[player].position, newRating);
+            newRating = 98 * playersDict[player].rating / 100;
+            Console.WriteLine($"{player}, stari rating: {playersDict[player].rating}, novi rating: {newRating}");
+            playersDict[player] = (playersDict[player].position, newRating);
         }
     }
 }
 
 //___3 - STATISTICS__________________________________________________________________________________________________
-void Statistics()
+void Statistics(Dictionary<string, (string position, int rating)> playersDict,
+    Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches, Dictionary<string, int> strikersDict)
 {
     Console.WriteLine("1 - Ispis svih igraca onako kako su spremljeni \n2 - Ispis svih igraca po ratingu uzlazno" +
         "\n3 - Ispis svih igraca po ratingu silazno \n4 - Ispis igraca po imenu i prezimenu" +
@@ -207,116 +247,115 @@ void Statistics()
     switch (myChoice)
     {
         case "1":
-            PrintInOrderAsSaved();
+            PrintInOrderAsSaved(playersDict);
             break;
         case "2":
-            PrintAscending();
+            PrintAscending(playersDict);
             break;
         case "3":
-            PrintDescending();
+            PrintDescending(playersDict);
             break;
         case "4":
-            PrintByNameAndSurname();
+            PrintByNameAndSurname(playersDict);
             break;
         case "5":
-            PrintByRating();
+            PrintByRating(playersDict);
             break;
         case "6":
-            PrintByPosition();
+            PrintByPosition(playersDict);
             break;
         case "7":
-            PrintBestPlayers();
+            PrintBestPlayers(playersDict);
             break;
         case "8":
-            PrintStrikers();
+            PrintStrikers(strikersDict);
             break;
         case "9":
-            PrintMyTeamResults();
+            PrintMyTeamResults(scoresByMatches);
             break;
         case "10":
-            PrintAllTeamsResults();
+            PrintAllTeamsResults(scoresByMatches);
             break;
         case "11":
-            PrintTable();
+            PrintTable(scoresByMatches);
             break;
-        case "P":
-            StartMenu();
+        case "P": // pressing P ends the calling of the function and continues the iteration of the while loop
             break;
     }
 }
-void PrintInOrderAsSaved()
+void PrintInOrderAsSaved(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Ispis igraca onako kako su spremljeni:\n");
 
-    foreach (var player in Global.playersDict)
+    foreach (var player in playersDict)
         Console.WriteLine($"{player.Key}, pozicija: {player.Value.position}, rating: {player.Value.rating}");
 
     ReturnToStartMenu();
 }
-void PrintAscending()
+void PrintAscending(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Ispis igraca po ratingu uzlazno:\n");
 
-    var newplayersDict = Global.playersDict.OrderBy(player => player.Value.rating);
+    var newplayersDict = playersDict.OrderBy(player => player.Value.rating);
 
     foreach (var player in newplayersDict)
         Console.WriteLine($"{player.Key}, pozicija: {player.Value.position}, rating: {player.Value.rating}");
 
     ReturnToStartMenu();
 }
-void PrintDescending()
+void PrintDescending(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Ispis igraca po ratingu silazno:\n");
 
-    var newplayersDict = Global.playersDict.OrderByDescending(player => player.Value.rating);
+    var newplayersDict = playersDict.OrderByDescending(player => player.Value.rating);
 
     foreach (var player in newplayersDict)
         Console.WriteLine($"{player.Key}, pozicija: {player.Value.position}, rating: {player.Value.rating}");
 
     ReturnToStartMenu();
 }
-void PrintByNameAndSurname()
+void PrintByNameAndSurname(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Unesite ime igraca cija vas pozicija i rating zanimaju: ");
     var name = InputName();
     Console.WriteLine("Unesite prezime igraca cija vas pozicija i rating zanimaju:");
     var surname = InputName();
 
-    if (!Global.playersDict.Keys.Contains(name + " " + surname))
+    if (!playersDict.Keys.Contains(name + " " + surname))
         Console.WriteLine("\nTrazeni igrac ne nalazi se na popisu!");
     else
-        Console.WriteLine($"\n{name + " " + surname}, pozicija: {Global.playersDict[name + " " + surname].position}, " +
-            $"rating: {Global.playersDict[name + " " + surname].rating}");
+        Console.WriteLine($"\n{name + " " + surname}, pozicija: {playersDict[name + " " + surname].position}, " +
+            $"rating: {playersDict[name + " " + surname].rating}");
 
     ReturnToStartMenu();
 }
-void PrintByRating()
+void PrintByRating(Dictionary<string, (string position, int rating)> playersDict)
 {
     var rating = InputRating();
     Console.WriteLine("\nIgraci s trazenim ratingom:\n");
 
-    foreach (var player in Global.playersDict)
+    foreach (var player in playersDict)
     {
         if (player.Value.rating == rating)
             Console.WriteLine($"{player.Key}, pozicija: {player.Value.position}, rating: {player.Value.rating}");
     }
     ReturnToStartMenu();
 }
-void PrintByPosition()
+void PrintByPosition(Dictionary<string, (string position, int rating)> playersDict)
 {
     var position = InputPosition();
     Console.WriteLine("\nIgraci s trazenom pozicijom:\n");
 
-    foreach (var player in Global.playersDict)
+    foreach (var player in playersDict)
     {
         if (player.Value.position == position)
             Console.WriteLine($"{player.Key}, pozicija: {player.Value.position}, rating: {player.Value.rating}");
     }
     ReturnToStartMenu();
 }
-void PrintBestPlayers()
+void PrintBestPlayers(Dictionary<string, (string position, int rating)> playersDict)
 {
-    var bestPlayers = ChooseBestPlayers();
+    var bestPlayers = ChooseBestPlayers(playersDict);
 
     if (bestPlayers.Count < 11)
         Console.WriteLine("Nema dovoljno igraca na svim pozicijama!");
@@ -324,43 +363,43 @@ void PrintBestPlayers()
     {
         Console.WriteLine("Najboljih 11 igraca:\n");
         foreach (var player in bestPlayers)
-            Console.WriteLine($"{player}, pozicija: {Global.playersDict[player].position}, rating: {Global.playersDict[player].rating}");
+            Console.WriteLine($"{player}, pozicija: {playersDict[player].position}, rating: {playersDict[player].rating}");
     }
     ReturnToStartMenu();
 }
-void PrintStrikers()
+void PrintStrikers(Dictionary<string, int> strikersDict)
 {
     Console.WriteLine("Strijelci i njihov broj zabijenih golova:\n");
 
-    foreach (var player in Global.strikersDict)
+    foreach (var player in strikersDict)
         Console.WriteLine($"{player.Key}: {player.Value}");
 
     ReturnToStartMenu();
 }
-void PrintMyTeamResults()
+void PrintMyTeamResults(Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches)
 {
     Console.WriteLine("Ispis svih rezultata ekipe:\n");
 
-    foreach (var match in Global.scoresByMatches.Keys)
+    foreach (var match in scoresByMatches.Keys)
     {
         if (match.team1 == teams.Hrvatska.ToString() || match.team2 == teams.Hrvatska.ToString())
-            Console.WriteLine($"{match.team1} - {match.team2} : {Global.scoresByMatches[match].score1} - {Global.scoresByMatches[match].score2}");
+            Console.WriteLine($"{match.team1} - {match.team2} : {scoresByMatches[match].score1} - {scoresByMatches[match].score2}");
     }
 
     ReturnToStartMenu();
 }
-void PrintAllTeamsResults()
+void PrintAllTeamsResults(Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches)
 {
     Console.WriteLine("Ispis rezultata svih ekipa:\n");
 
-    foreach (var match in Global.scoresByMatches.Keys)
+    foreach (var match in scoresByMatches.Keys)
     {
-        Console.WriteLine($"{match.team1} - {match.team2} : {Global.scoresByMatches[match].score1} - {Global.scoresByMatches[match].score2}");
+        Console.WriteLine($"{match.team1} - {match.team2} : {scoresByMatches[match].score1} - {scoresByMatches[match].score2}");
     }
 
     ReturnToStartMenu();
 }
-void PrintTable()
+void PrintTable(Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches)
 {
     var myTable = new Dictionary<string, (int points, int difference)>()
     {
@@ -372,7 +411,7 @@ void PrintTable()
     string team1, team2;
     int currentDifference;
 
-    foreach (var match in Global.scoresByMatches)
+    foreach (var match in scoresByMatches)
     {
         team1 = match.Key.team1;
         team2 = match.Key.team2;
@@ -405,7 +444,7 @@ void PrintTable()
 }
 
 //___4 - PLAYER CHECKUP_____________________________________________________________________________________________
-void PlayerCheckup()
+void PlayerCheckup(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("1 - Unos novog igraca \n2 - Brisanje igraca \n3 - Uredivanje igraca " +
         "\nP - Povratak na glavni izbornik");
@@ -418,16 +457,15 @@ void PlayerCheckup()
     switch (myChoice)
     {
         case "1":
-            AddPlayer();
+            AddPlayer(playersDict);
             break;
         case "2":
-            DeletePlayer();
+            DeletePlayer(playersDict);
             break;
         case "3":
-            EditPlayer();
+            EditPlayer(playersDict);
             break;
         case "P":
-            StartMenu();
             break;
     }
 }
@@ -442,9 +480,9 @@ bool ConfirmDialogue()
     }
     return confirmation == "Y";
 }
-void AddPlayer()
+void AddPlayer(Dictionary<string, (string position, int rating)> playersDict)
 {
-    if (Global.playersDict.Count == 26)
+    if (playersDict.Count == 26)
         Console.WriteLine("U ekipi vec ima 26 igraca!");
     else
     {
@@ -453,7 +491,7 @@ void AddPlayer()
         Console.WriteLine("Unesite prezime igraca kojeg zelite unijeti:");
         var surname = InputName();
 
-        if (Global.playersDict.Keys.Contains(name + " " + surname))
+        if (playersDict.Keys.Contains(name + " " + surname))
             Console.WriteLine("Igrac s tim imenom i prezimenom vec je na popisu!");
         else
         {
@@ -464,14 +502,13 @@ void AddPlayer()
                 $"rating {rating}?");
             if (ConfirmDialogue())
             {
-                Global.playersDict.Add(name + " " + surname, (position, rating));
+                playersDict.Add(name + " " + surname, (position, rating));
                 Console.WriteLine("Igrac je uspjesno dodan!");
             }
             else
                 Console.WriteLine("Radnja je zaustavljena!");
         }
     }
-
     ReturnToStartMenu();
 }
 string InputName()
@@ -520,7 +557,7 @@ int InputRating()
     }
     return rating;
 }
-void DeletePlayer()
+void DeletePlayer(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("1 - Brisanje igraca unosom imena i prezimena \nP - Povratak na glavni izbornik");
 
@@ -529,18 +566,16 @@ void DeletePlayer()
 
     Console.Clear();
     if (myChoice == "1")
-        DeleteByNameAndSurname();
-    else
-        StartMenu();
+        DeleteByNameAndSurname(playersDict);
 }
-void DeleteByNameAndSurname()
+void DeleteByNameAndSurname(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Unesite ime igraca kojeg zelite izbrisati:");
     var name = InputName();
     Console.WriteLine("Unesite prezime igraca kojeg zelize izbrisati:");
     var surname = InputName();
 
-    if (!Global.playersDict.Keys.Contains(name + " " + surname))
+    if (!playersDict.Keys.Contains(name + " " + surname))
         Console.WriteLine($"{name + " " + surname} se ne nalazi na popisu!");
     else
     {
@@ -548,15 +583,14 @@ void DeleteByNameAndSurname()
         if (ConfirmDialogue())
         {
             Console.WriteLine("Igrac uspjesno izbrisan!");
-            Global.playersDict.Remove(name + " " + surname);
+            playersDict.Remove(name + " " + surname);
         }
         else
             Console.WriteLine("Radnja je zaustavljena!");
     }
-
     ReturnToStartMenu();
 }
-void EditPlayer()
+void EditPlayer(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("1 - Uredi ime i prezime igraca \n2 - Uredi poziciju igraca" +
         "\n3 - Uredi rating igraca \nP - Povratak na glavni izbornik");
@@ -569,27 +603,26 @@ void EditPlayer()
     switch (myChoice)
     {
         case "1":
-            EditNameAndSurname();
+            EditNameAndSurname(playersDict);
             break;
         case "2":
-            EditPosition();
+            EditPosition(playersDict);
             break;
         case "3":
-            EditRating();
+            EditRating(playersDict);
             break;
         case "P":
-            StartMenu();
             break;
     }
 }
-void EditNameAndSurname()
+void EditNameAndSurname(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Unesite ime igraca kojeg zelite urediti:");
     var name = InputName();
     Console.WriteLine("Unesite prezime igraca kojeg zelite urediti:");
     var surname = InputName();
 
-    if (!Global.playersDict.Keys.Contains(name + " " + surname))
+    if (!playersDict.Keys.Contains(name + " " + surname))
         Console.WriteLine($"{name + " " + surname} ne nalazi se na popisu!");
     else
     {
@@ -602,9 +635,9 @@ void EditNameAndSurname()
             $"promijeniti u {newName + " " + newSurname}?");
         if (ConfirmDialogue())
         {
-            Global.playersDict.Add(newName + " " + newSurname,
-                (Global.playersDict[name + " " + surname].position, Global.playersDict[name + " " + surname].rating));
-            Global.playersDict.Remove(name + " " + surname);
+            playersDict.Add(newName + " " + newSurname,
+                (playersDict[name + " " + surname].position, playersDict[name + " " + surname].rating));
+            playersDict.Remove(name + " " + surname);
             Console.WriteLine($"{name + " " + surname} uspjesno preimenovan u {newName + " " + newSurname}!");
         }
         else
@@ -613,70 +646,65 @@ void EditNameAndSurname()
 
     ReturnToStartMenu();
 }
-void EditPosition()
+void EditPosition(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Unesite ime igraca kojeg zelite urediti:");
     var name = InputName();
     Console.WriteLine("Unesite prezime igraca kojeg zelite urediti:");
     var surname = InputName();
 
-    if (!Global.playersDict.Keys.Contains(name + " " + surname))
+    if (!playersDict.Keys.Contains(name + " " + surname))
         Console.WriteLine($"{name + " " + surname} ne nalazi se na popisu!");
     else
     {
         var pozicija = InputPosition();
-        if (pozicija == Global.playersDict[name + " " + surname].position)
+        if (pozicija == playersDict[name + " " + surname].position)
             Console.WriteLine("Igrac vec ima tu poziciju!");
         else
         {
             Console.WriteLine($"Jeste li sigurni da igracu {name + " " + surname} zelite promijeniti " +
-                $"poziciju iz {Global.playersDict[name + " " + surname].position} u {pozicija}?");
+                $"poziciju iz {playersDict[name + " " + surname].position} u {pozicija}?");
             if (ConfirmDialogue())
             {
-                Global.playersDict[name + " " + surname] = (pozicija, Global.playersDict[name + " " + surname].rating);
+                playersDict[name + " " + surname] = (pozicija, playersDict[name + " " + surname].rating);
                 Console.WriteLine("Pozicija igraca uspjesno promijenjena!");
             }
             else
                 Console.WriteLine("Radnja je zaustavljena!");
         }
     }
-
     ReturnToStartMenu();
 }
-void EditRating()
+void EditRating(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Unesite ime igraca kojeg zelite urediti:");
     var name = InputName();
     Console.WriteLine("Unesite prezime igraca kojeg zelite urediti:");
     var surname = InputName();
 
-    if (!Global.playersDict.Keys.Contains(name + " " + surname))
+    if (!playersDict.Keys.Contains(name + " " + surname))
         Console.WriteLine($"{name + " " + surname} ne nalazi se na popisu!");
     else
     {
         var rating = InputRating();
-        if (rating == Global.playersDict[name + " " + surname].rating)
+        if (rating == playersDict[name + " " + surname].rating)
             Console.WriteLine("Igrac vec ima taj rating!");
         else
         {
             Console.WriteLine($"Jeste li sigurni da igracu {name + " " + surname} zelite promijeniti " +
-                $"rating iz {Global.playersDict[name + " " + surname].rating} u {rating}?");
+                $"rating iz {playersDict[name + " " + surname].rating} u {rating}?");
             if (ConfirmDialogue())
             {
-                Global.playersDict[name + " " + surname] = (Global.playersDict[name + " " + surname].position, rating);
+                playersDict[name + " " + surname] = (playersDict[name + " " + surname].position, rating);
                 Console.WriteLine("Rating igraca uspjesno promijenjen!");
             }
             else
                 Console.WriteLine("Radnja je zaustavljena!");
         }
     }
-
     ReturnToStartMenu();
 }
 //_______________________________________________________________________________________________________________
-
-StartMenu();
-
 enum teams
 {
     Hrvatska,
@@ -684,32 +712,3 @@ enum teams
     Belgija,
     Kanada
 };
-static class Global
-{
-    public static Dictionary<string, (string position, int rating)> playersDict = new Dictionary<string, (string position, int rating)>()
-    {
-        {"Luka Modric", ("MF",88) },
-        {"Marcelo Brozovic", ("MF",86) },
-        {"Mateo Kovacic", ("MF",84) },
-        {"Ivan Perisic", ("MF",84) },
-        {"Andrej Kramaric", ("FW",82) },
-        {"Ivan Rakitic", ("MF",82) },
-        {"Josko Gvardiol", ("DF",81) },
-        {"Mario Pasalic", ("MF",81) },
-        {"Lovro Majer", ("MF",80) },
-        {"Dominik Livakovic", ("GK",80) },
-        {"Ante Rebic", ("FW",80) },
-        {"Josip Brekalo", ("MF",79) },
-        {"Borna Sosa", ("DF",78) },
-        {"Nikola Vlasic", ("MF",78) },
-        {"Duje Caleta-Car", ("DF",78) },
-        {"Dejan Lovren", ("DF",78) },
-        {"Mislav Orsic", ("FW",77) },
-        {"Marko Livaja", ("FW",77) },
-        {"Domagoj Vida", ("DF",76) },
-        {"Ante Budimir", ("FW",76) }
-    };
-
-    public static Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches = new Dictionary<(string team1, string team2), (int score1, int score2)>();
-    public static Dictionary<string, int> strikersDict = new Dictionary<string, int>();
-}
