@@ -65,6 +65,7 @@ while (myChoice != "0") // repeats the process until the option "0" is chosen on
 Console.Clear();
 Console.WriteLine("Aplikacija zatvorena!");
 Environment.Exit(0); // when "0" is chosen on the menu, the while loop stops and then this line is executed to close the app
+
 string Input(string choice, List<string> options)
 {
     while (!options.Contains(choice))
