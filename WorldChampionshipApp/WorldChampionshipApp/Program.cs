@@ -22,8 +22,9 @@
         {"Ante Budimir", ("FW",76) }
     };
 
-Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches = new Dictionary<(string team1, string team2), (int score1, int score2)>();
-Dictionary<string, int> strikersDict = new Dictionary<string, int>();
+var scoresByMatches = new Dictionary<(string team1, string team2), (int score1, int score2)>();
+var strikersDict = new Dictionary<string, int>();
+
 string StartMenu()
 {
     Console.WriteLine("1 - Odradi trening \n2 - Odigraj utakmicu" +
@@ -43,9 +44,6 @@ while (myChoice != "0") // repeats the process until the option "0" is chosen on
     Console.Clear();
     switch (myChoice)
     {
-        case "0":
-            Environment.Exit(0);
-            break;
         case "1":
             Training(playersDict);
             break;
@@ -63,6 +61,10 @@ while (myChoice != "0") // repeats the process until the option "0" is chosen on
     Console.Clear();
     myChoice = StartMenu();
 }
+
+Console.Clear();
+Console.WriteLine("Aplikacija zatvorena!");
+Environment.Exit(0); // when "0" is chosen on the menu, the while loop stops and then this line is executed to close the app
 string Input(string choice, List<string> options)
 {
     while (!options.Contains(choice))
@@ -78,11 +80,13 @@ void ReturnToStartMenu()
     if (!(Console.ReadLine().Trim().ToUpper() == "P")) // pressing anything other than P results in closing the app
     {
         Console.Clear();
+        Console.WriteLine("Aplikacija zatvorena!");
         Environment.Exit(0);
     }
 }
 
 //___1 - TRAINING______________________________________________________________________________________________
+
 void Training(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("Igrači su uspješno odradili trening:\n");
@@ -103,6 +107,7 @@ void Training(Dictionary<string, (string position, int rating)> playersDict)
 }
 
 //___2 - PLAY A MATCH________________________________________________________________________________________________
+
 void PlayAMatch(Dictionary<string, (string position, int rating)> playersDict,
     Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches, Dictionary<string, int> strikersDict)
 {
@@ -230,6 +235,7 @@ void UpdatePlayersRatings(List<string> bestPlayers, int score1, int score2,
 }
 
 //___3 - STATISTICS__________________________________________________________________________________________________
+
 void Statistics(Dictionary<string, (string position, int rating)> playersDict,
     Dictionary<(string team1, string team2), (int score1, int score2)> scoresByMatches, Dictionary<string, int> strikersDict)
 {
@@ -444,6 +450,7 @@ void PrintTable(Dictionary<(string team1, string team2), (int score1, int score2
 }
 
 //___4 - PLAYER CHECKUP_____________________________________________________________________________________________
+
 void PlayerCheckup(Dictionary<string, (string position, int rating)> playersDict)
 {
     Console.WriteLine("1 - Unos novog igraca \n2 - Brisanje igraca \n3 - Uredivanje igraca " +
